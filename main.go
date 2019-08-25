@@ -3,8 +3,11 @@ package main
 import (
 	"fmt"
 	"github.com/deadsy/sdfx/sdf"
+	"io"
+	"io/ioutil"
 	"math"
-	"math/rand"
+	"os"
+	"strconv"
 )
 
 type tset []*sdf.Triangle3
@@ -21,12 +24,7 @@ func (s tset) RaisePoint(x, y, z float64) {
 }
 
 func main() {
-	// heights need to be divisible by 2
-	heights := []float64{}
-	for i := 0; i <= 256; i++ {
-		heights = append(heights, rand.Float64()*20)
-	}
-	saveMesh(heights)
+	saveMesh(mustGetNumbersFromDecimalNumber(os.Stdin)[:1023])
 }
 
 func saveMesh(heightOffsets []float64) {
@@ -36,7 +34,7 @@ func saveMesh(heightOffsets []float64) {
 	}
 
 	baseHeight := 5.0
-	squareSize := 30.0
+	squareSize := 10.0
 	numXYSquares := math.Floor(math.Sqrt(float64(len(heightOffsets))))
 	sideLength := numXYSquares * squareSize
 
@@ -140,4 +138,27 @@ func saveMesh(heightOffsets []float64) {
 	)
 
 	sdf.SaveSTL("output.stl", tris)
+}
+
+
+func mustGetNumbersFromDecimalNumber(f io.Reader) []float64 {
+
+	// todo: Should just read as much as needed rather than everything.
+	b, err := ioutil.ReadAll(f)
+	if err != nil {
+		panic(err)
+	}
+
+	numbers := []float64{}
+	for _, char := range string(b) {
+		if string(char) == "." {
+			continue
+		}
+		intVal, err := strconv.Atoi(string(char))
+		if err != nil {
+			panic(err)
+		}
+		numbers = append(numbers, float64(intVal * 5))
+	}
+	return numbers
 }
